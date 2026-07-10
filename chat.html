@@ -1,0 +1,536 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>TravelGenie AI — Chat</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body { width: 100%; height: 100%; overflow: hidden; }
+
+    /* ── Full-screen travel gradient background ── */
+    body {
+      font-family: "Inter", -apple-system, "Segoe UI", system-ui, sans-serif;
+      color: #f0f0ff;
+      background:
+        radial-gradient(ellipse 140% 90% at 10% 0%,   rgba(99,47,220,0.55)  0%, transparent 55%),
+        radial-gradient(ellipse 120% 80% at 90% 100%,  rgba(14,110,212,0.50) 0%, transparent 55%),
+        radial-gradient(ellipse 100% 80% at 55% 50%,   rgba(20,20,80,0.60)   0%, transparent 70%),
+        linear-gradient(160deg, #07071e 0%, #0b0b28 40%, #070e2c 70%, #06061a 100%);
+    }
+
+    /* Glossy top sheen */
+    body::before {
+      content: "";
+      position: fixed; inset: 0;
+      background:
+        radial-gradient(ellipse 60% 40% at 50% -10%, rgba(255,255,255,0.055) 0%, transparent 70%),
+        radial-gradient(ellipse 80% 30% at 50%  110%, rgba(59,130,212,0.08)  0%, transparent 70%);
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    /* ── Animated orbs ── */
+    @keyframes orbFloat {
+      0%,100% { transform: translate(0,0) scale(1); }
+      33%      { transform: translate(24px,-18px) scale(1.05); }
+      66%      { transform: translate(-14px,28px)  scale(0.97); }
+    }
+    .orb { position: fixed; border-radius: 50%; pointer-events: none; filter: blur(70px); z-index: 0; }
+    .orb-a { width:560px; height:560px; background:radial-gradient(circle,rgba(124,92,216,0.30) 0%,transparent 68%); top:-160px; left:-140px; animation:orbFloat 22s ease-in-out infinite; }
+    .orb-b { width:420px; height:420px; background:radial-gradient(circle,rgba(59,130,212,0.24) 0%,transparent 68%); bottom:-120px; right:-100px; animation:orbFloat 28s ease-in-out infinite reverse; }
+    .orb-c { width:300px; height:300px; background:radial-gradient(circle,rgba(240,147,251,0.15) 0%,transparent 68%); top:38%; left:44%; animation:orbFloat 19s ease-in-out infinite 3s; }
+
+    /* ── Top bar ── */
+    .topbar {
+      position: fixed; top: 0; left: 0; right: 0; height: 60px;
+      z-index: 100;
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 0 26px;
+      background: rgba(255,255,255,0.045);
+      border-bottom: 1px solid rgba(255,255,255,0.09);
+      backdrop-filter: blur(22px); -webkit-backdrop-filter: blur(22px);
+    }
+    .topbar-left {
+      display: flex; align-items: center; gap: 10px;
+      text-decoration: none; flex-shrink: 0;
+    }
+    .topbar-logo {
+      width: 34px; height: 34px; border-radius: 9px;
+      background: linear-gradient(135deg, #7c5cd8, #3b82d4);
+      display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+    }
+    .topbar-logo svg { width: 17px; height: 17px; color: #fff; }
+    .topbar-brand {
+      font-size: 0.95rem; font-weight: 700;
+      background: linear-gradient(90deg, #a78bfa, #60a5fa);
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+    }
+    .topbar-center {
+      position: absolute; left: 50%; transform: translateX(-50%);
+    }
+    .ibm-pill {
+      display: inline-flex; align-items: center; gap: 6px;
+      padding: 5px 13px;
+      background: linear-gradient(135deg, rgba(124,92,216,0.18), rgba(59,130,212,0.11));
+      border: 1px solid rgba(124,92,216,0.30);
+      border-radius: 99px; font-size: 0.71rem; font-weight: 500; color: #a78bfa;
+    }
+    .back-btn {
+      display: inline-flex; align-items: center; gap: 6px;
+      padding: 7px 16px;
+      background: rgba(255,255,255,0.07); border: 1px solid rgba(255,255,255,0.11);
+      border-radius: 50px; color: rgba(240,240,255,0.72);
+      font-size: 0.78rem; font-weight: 500; cursor: pointer;
+      font-family: inherit; text-decoration: none;
+      transition: background 0.18s, color 0.18s, border-color 0.18s;
+      flex-shrink: 0;
+    }
+    .back-btn:hover { background: rgba(255,255,255,0.13); border-color: rgba(255,255,255,0.22); color: #f0f0ff; }
+    .back-btn svg { width: 13px; height: 13px; flex-shrink: 0; }
+
+    /* ── Centre content — visible before widget opens ── */
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(24px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    @keyframes pulse {
+      0%,100% { box-shadow: 0 0 0 0 rgba(124,92,216,0.4); }
+      50%      { box-shadow: 0 0 0 14px rgba(124,92,216,0); }
+    }
+
+    .center-wrap {
+      position: fixed; top: 60px; left: 0; right: 0; bottom: 0;
+      z-index: 1;
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      gap: 22px;
+      animation: fadeUp 0.8s 0.1s cubic-bezier(.22,.68,0,1.2) both;
+    }
+
+    /* Glass card holding the "waiting" state */
+    .chat-card {
+      display: flex; flex-direction: column; align-items: center;
+      gap: 18px; padding: 48px 52px;
+      max-width: 480px; width: calc(100% - 40px);
+      background: rgba(255,255,255,0.055);
+      border: 1px solid rgba(255,255,255,0.12);
+      border-radius: 26px;
+      backdrop-filter: blur(28px) saturate(1.4);
+      -webkit-backdrop-filter: blur(28px) saturate(1.4);
+      box-shadow: 0 0 0 1px rgba(255,255,255,0.04) inset, 0 28px 70px rgba(0,0,0,0.5);
+      text-align: center;
+    }
+
+    /* Animated AI orb icon */
+    .ai-orb {
+      width: 80px; height: 80px; border-radius: 50%;
+      background: linear-gradient(135deg, #7c5cd8, #3b82d4);
+      display: flex; align-items: center; justify-content: center;
+      animation: pulse 2.4s ease-in-out infinite;
+      flex-shrink: 0;
+    }
+    .ai-orb svg { width: 36px; height: 36px; color: #fff; }
+
+    .chat-card h2 {
+      font-size: clamp(1.2rem, 3vw, 1.6rem);
+      font-weight: 800; letter-spacing: -0.4px; line-height: 1.2;
+    }
+    .chat-card p {
+      font-size: 0.9rem; color: rgba(240,240,255,0.58); line-height: 1.7; max-width: 340px;
+    }
+
+    /* "Click here" CTA button on the card */
+    .open-chat-btn {
+      display: inline-flex; align-items: center; gap: 9px;
+      padding: 14px 28px;
+      background: linear-gradient(135deg, #7c5cd8, #3b82d4);
+      color: #fff; border: none; border-radius: 50px;
+      font-family: inherit; font-size: 0.95rem; font-weight: 700;
+      cursor: pointer; letter-spacing: 0.1px;
+      box-shadow: 0 6px 24px rgba(124,92,216,0.45);
+      transition: transform 0.18s ease, filter 0.18s ease, box-shadow 0.18s ease;
+      position: relative; overflow: hidden;
+    }
+    .open-chat-btn::before {
+      content: "";
+      position: absolute; top: 0; left: -75%;
+      width: 55%; height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(255,255,255,0.18), transparent);
+      transform: skewX(-18deg);
+      transition: left 0.55s ease;
+    }
+    .open-chat-btn:hover::before { left: 130%; }
+    .open-chat-btn:hover {
+      transform: translateY(-2px) scale(1.03);
+      box-shadow: 0 10px 32px rgba(124,92,216,0.6);
+      filter: brightness(1.08);
+    }
+    .open-chat-btn:active { transform: scale(0.97); }
+    .open-chat-btn svg { width: 17px; height: 17px; flex-shrink: 0; }
+
+    /* Bounce arrow hint */
+    @keyframes bounce {
+      0%,100% { transform: translateY(0); }
+      50%      { transform: translateY(6px); }
+    }
+    .hint-row {
+      display: flex; align-items: center; gap: 7px;
+      font-size: 0.75rem; color: rgba(240,240,255,0.35);
+    }
+    .hint-row svg { width: 13px; height: 13px; animation: bounce 1.4s ease-in-out infinite; }
+
+    /* Typing dots animation */
+    @keyframes dot { 0%,80%,100% { opacity: 0.2; transform: scale(0.8); } 40% { opacity: 1; transform: scale(1); } }
+    .dots { display: flex; gap: 5px; align-items: center; }
+    .dots span {
+      width: 7px; height: 7px; border-radius: 50%;
+      background: linear-gradient(135deg, #a78bfa, #60a5fa);
+      animation: dot 1.4s ease-in-out infinite;
+    }
+    .dots span:nth-child(2) { animation-delay: 0.2s; }
+    .dots span:nth-child(3) { animation-delay: 0.4s; }
+
+    /* ── Music player button ── */
+    @keyframes musicIn {
+      from { opacity: 0; transform: translateY(16px) scale(0.88); }
+      to   { opacity: 1; transform: translateY(0)    scale(1); }
+    }
+    @keyframes barDance {
+      0%,100% { transform: scaleY(0.4); }
+      50%      { transform: scaleY(1);   }
+    }
+
+    .music-btn {
+      position: fixed;
+      bottom: 28px; left: 28px;
+      z-index: 10000;
+      display: flex; align-items: center; gap: 10px;
+      padding: 0 18px 0 8px; height: 48px;
+      background: rgba(255,255,255,0.08);
+      border: 1px solid rgba(255,255,255,0.14);
+      border-radius: 99px;
+      backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+      box-shadow: 0 4px 20px rgba(0,0,0,0.35);
+      cursor: pointer; font-family: inherit;
+      color: #f0f0ff;
+      transition: background 0.2s, border-color 0.2s, transform 0.18s;
+      animation: musicIn 0.7s 0.8s cubic-bezier(.22,.68,0,1.2) both;
+      user-select: none;
+    }
+    .music-btn:hover {
+      background: rgba(124,92,216,0.22);
+      border-color: rgba(124,92,216,0.45);
+      transform: translateY(-2px);
+    }
+    .music-btn:active { transform: scale(0.97); }
+
+    /* Icon circle */
+    .music-icon {
+      width: 32px; height: 32px; border-radius: 50%; flex-shrink: 0;
+      background: linear-gradient(135deg, #7c5cd8, #3b82d4);
+      display: flex; align-items: center; justify-content: center;
+    }
+    .music-icon svg { width: 15px; height: 15px; color: #fff; }
+
+    /* Animated equaliser bars — shown when playing */
+    .eq-bars {
+      display: flex; align-items: flex-end; gap: 2.5px; height: 16px;
+    }
+    .eq-bars span {
+      width: 3px; border-radius: 2px;
+      background: linear-gradient(to top, #7c5cd8, #60a5fa);
+      transform-origin: bottom;
+    }
+    .eq-bars span:nth-child(1) { height: 10px; animation: barDance 0.7s 0.0s ease-in-out infinite; }
+    .eq-bars span:nth-child(2) { height: 16px; animation: barDance 0.7s 0.15s ease-in-out infinite; }
+    .eq-bars span:nth-child(3) { height: 12px; animation: barDance 0.7s 0.3s ease-in-out infinite; }
+    .eq-bars span:nth-child(4) { height: 8px;  animation: barDance 0.7s 0.1s ease-in-out infinite; }
+    .eq-bars.paused span { animation-play-state: paused; transform: scaleY(0.4); }
+
+    .music-label {
+      font-size: 0.75rem; font-weight: 600;
+      color: rgba(240,240,255,0.75);
+      white-space: nowrap;
+    }
+
+    /* ── Music hint tooltip above the button ── */
+    @keyframes hintIn  { from { opacity:0; transform:translateX(-50%) translateY(6px); } to { opacity:1; transform:translateX(-50%) translateY(0); } }
+    @keyframes hintOut { from { opacity:1; } to { opacity:0; pointer-events:none; } }
+
+    .music-hint {
+      position: fixed;
+      bottom: 86px; left: 80px;
+      background: rgba(20,20,48,0.82);
+      border: 1px solid rgba(255,255,255,0.13);
+      border-radius: 10px;
+      backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
+      padding: 7px 13px;
+      font-size: 0.72rem; font-weight: 500;
+      color: rgba(240,240,255,0.80);
+      white-space: nowrap;
+      pointer-events: none;
+      z-index: 10001;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.4);
+      animation: hintIn 0.5s 1.2s cubic-bezier(.22,.68,0,1.2) both,
+                 hintOut 0.6s 5s ease forwards;
+    }
+    /* small caret pointing down toward the button */
+    .music-hint::after {
+      content: "";
+      position: absolute;
+      bottom: -6px; left: 14px;
+      width: 10px; height: 10px;
+      background: rgba(20,20,48,0.82);
+      border-right: 1px solid rgba(255,255,255,0.13);
+      border-bottom: 1px solid rgba(255,255,255,0.13);
+      transform: rotate(45deg);
+    }
+    /* re-show on hover over the button */
+    .music-btn:hover ~ .music-hint,
+    .music-hint:hover {
+      animation: hintIn 0.25s ease both;
+    }
+
+    /* ── IBM widget root — default IBM position ── */
+    #root { position: fixed; z-index: 9999; }
+  </style>
+</head>
+<body>
+
+  <!-- Orbs -->
+  <div class="orb orb-a"></div>
+  <div class="orb orb-b"></div>
+  <div class="orb orb-c"></div>
+
+  <!-- Top bar -->
+  <header class="topbar">
+    <a href="index.html" class="topbar-left">
+      <div class="topbar-logo">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="9"/>
+          <ellipse cx="12" cy="12" rx="4.5" ry="9"/>
+          <line x1="3" y1="9" x2="21" y2="9"/>
+          <line x1="3" y1="15" x2="21" y2="15"/>
+        </svg>
+      </div>
+      <span class="topbar-brand">TravelGenie AI</span>
+    </a>
+
+    <div class="topbar-center">
+      <div class="ibm-pill">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="10" height="10"><path d="M12 3l1.5 4.5L18 9l-4.5 1.5L12 15l-1.5-4.5L6 9l4.5-1.5z"/></svg>
+        Powered by IBM watsonx Orchestrate
+      </div>
+    </div>
+
+    <a href="index.html" class="back-btn">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M12 5l-7 7 7 7"/></svg>
+      Back to Home
+    </a>
+  </header>
+
+  <!-- Centre glass card — clicking opens the widget -->
+  <div class="center-wrap">
+    <div class="chat-card">
+      <div class="ai-orb">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/>
+        </svg>
+      </div>
+      <div class="dots"><span></span><span></span><span></span></div>
+      <h2>Your AI Travel Planner Agent<br>is Ready</h2>
+      <p>Ask anything — itineraries, budgets, visa tips, hidden gems. Your IBM watsonx agent is live and waiting.</p>
+
+      <!-- Primary CTA — triggers the IBM widget -->
+      <button class="open-chat-btn" id="openChatBtn">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
+        Click here to Start Chat
+      </button>
+
+      <div class="hint-row">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12l7 7 7-7"/></svg>
+        or click the bubble in the bottom-right corner
+      </div>
+    </div>
+  </div>
+
+  <!-- Floating music player button -->
+  <audio id="bgAudio" src="alex-morgan-native-american-flute-545535.mp3" loop preload="auto"></audio>
+  <div class="music-hint" id="musicHint">🎵 Click to stop the music</div>
+  <button class="music-btn" id="musicBtn" aria-label="Toggle background music">
+    <div class="music-icon">
+      <!-- Play icon (shown when paused) -->
+      <svg id="playIco" viewBox="0 0 24 24" fill="currentColor"><polygon points="5,3 19,12 5,21"/></svg>
+      <!-- Pause icon (shown when playing) -->
+      <svg id="pauseIco" viewBox="0 0 24 24" fill="currentColor" style="display:none"><rect x="6" y="4" width="4" height="16" rx="1"/><rect x="14" y="4" width="4" height="16" rx="1"/></svg>
+    </div>
+    <div class="eq-bars paused" id="eqBars">
+      <span></span><span></span><span></span><span></span>
+    </div>
+    <span class="music-label" id="musicLabel">Ambient Music</span>
+  </button>
+
+  <!-- IBM watsonx Orchestrate widget mounts here -->
+  <div id="root"></div>
+
+  <script>
+    /* ── IBM watsonx Orchestrate embed ── */
+    window.wxOConfiguration = {
+      orchestrationID: "2dc4ec3745fb483e9fa2e78d80d69673_8aaa6112-aec9-4ed2-9937-af274bbc83f8",
+      hostURL: "https://eu-gb.watson-orchestrate.cloud.ibm.com",
+      rootElementID: "root",
+      deploymentPlatform: "ibmcloud",
+      crn: "crn:v1:bluemix:public:watsonx-orchestrate:eu-gb:a/2dc4ec3745fb483e9fa2e78d80d69673:8aaa6112-aec9-4ed2-9937-af274bbc83f8::",
+      chatOptions: {
+        agentId: "bcc2284f-a11d-4a7c-a213-bce01860c6ff",
+        agentEnvironmentId: "ef167cf7-3a74-4449-9ec9-5dc482573c00",
+      }
+    };
+    setTimeout(function () {
+      var script = document.createElement('script');
+      script.src = window.wxOConfiguration.hostURL + '/wxochat/wxoLoader.js?embed=true';
+      script.addEventListener('load', function () {
+        wxoLoader.init();
+      });
+      document.head.appendChild(script);
+    }, 0);
+
+    /* "Click here to Start Chat" button — triggers the IBM bubble */
+    function openWidget() {
+      var btn =
+        document.querySelector('#root button[class*="launcher" i]') ||
+        document.querySelector('#root button[class*="toggle"   i]') ||
+        document.querySelector('#root button[aria-label]')          ||
+        document.querySelector('#root button');
+
+      if (btn) { btn.click(); return; }
+
+      if (typeof wxoLoader !== 'undefined' && typeof wxoLoader.open === 'function') {
+        wxoLoader.open(); return;
+      }
+
+      /* Widget not ready yet — poll briefly then open */
+      var tries = 0;
+      var poll  = setInterval(function () {
+        tries++;
+        var b =
+          document.querySelector('#root button[class*="launcher" i]') ||
+          document.querySelector('#root button[class*="toggle"   i]') ||
+          document.querySelector('#root button[aria-label]')          ||
+          document.querySelector('#root button');
+        if (b) { clearInterval(poll); b.click(); return; }
+        if (typeof wxoLoader !== 'undefined' && typeof wxoLoader.open === 'function') {
+          clearInterval(poll); wxoLoader.open(); return;
+        }
+        if (tries > 40) clearInterval(poll);
+      }, 150);
+    }
+
+    var openBtn = document.getElementById('openChatBtn');
+    if (openBtn) openBtn.addEventListener('click', openWidget);
+
+    /* ══════════════════════════════════════════════════════
+       AMBIENT MUSIC — Native American Flute (MP3 file)
+       Resumes from sessionStorage position set by index.html.
+       Loops seamlessly, fades in/out on play/pause.
+    ══════════════════════════════════════════════════════ */
+    var bgAudio    = document.getElementById('bgAudio');
+    var isPlaying  = false;
+    var fadeTimer  = null;
+
+    var musicBtn   = document.getElementById('musicBtn');
+    var playIco    = document.getElementById('playIco');
+    var pauseIco   = document.getElementById('pauseIco');
+    var eqBars     = document.getElementById('eqBars');
+    var musicLabel = document.getElementById('musicLabel');
+
+    /* Smooth volume fade helper */
+    function fadeTo(targetVol, durationMs, onDone) {
+      clearInterval(fadeTimer);
+      var steps     = 30;
+      var interval  = durationMs / steps;
+      var startVol  = bgAudio.volume;
+      var step      = (targetVol - startVol) / steps;
+      var count     = 0;
+      fadeTimer = setInterval(function () {
+        count++;
+        bgAudio.volume = Math.min(1, Math.max(0, startVol + step * count));
+        if (count >= steps) {
+          clearInterval(fadeTimer);
+          bgAudio.volume = targetVol;
+          if (onDone) onDone();
+        }
+      }, interval);
+    }
+
+    var musicHint  = document.getElementById('musicHint');
+
+    function setPlayingUI() {
+      playIco.style.display  = 'none';
+      pauseIco.style.display = 'block';
+      eqBars.classList.remove('paused');
+      musicLabel.textContent = 'Now Playing';
+      if (musicHint) musicHint.textContent = '🎵 Click to stop the music';
+    }
+    function setPausedUI() {
+      playIco.style.display  = 'block';
+      pauseIco.style.display = 'none';
+      eqBars.classList.add('paused');
+      musicLabel.textContent = 'Ambient Music';
+      if (musicHint) musicHint.textContent = '🎵 Click to play the music';
+    }
+
+    function startMusic() {
+      bgAudio.volume = 0;
+      bgAudio.play().then(function () {
+        fadeTo(0.72, 1200);
+        isPlaying = true;
+        setPlayingUI();
+      }).catch(function () { /* autoplay blocked */ });
+    }
+
+    function stopMusic() {
+      fadeTo(0, 700, function () { bgAudio.pause(); });
+      isPlaying = false;
+      setPausedUI();
+    }
+
+    /* ── Resume from index.html ── */
+    var savedTime    = parseFloat(sessionStorage.getItem('tg_audio_time')    || '0');
+    var wasPlaying   = sessionStorage.getItem('tg_audio_playing') === '1';
+    sessionStorage.removeItem('tg_audio_time');
+    sessionStorage.removeItem('tg_audio_playing');
+
+    if (wasPlaying) {
+      if (savedTime > 0) bgAudio.currentTime = savedTime;
+      bgAudio.volume = 0;
+      bgAudio.play().then(function () {
+        fadeTo(0.72, 800);
+        isPlaying = true;
+        setPlayingUI();
+      }).catch(function () { setPausedUI(); });
+    }
+
+    /* Save state when leaving chat page */
+    window.addEventListener('beforeunload', function () {
+      if (bgAudio && !bgAudio.paused) {
+        sessionStorage.setItem('tg_audio_time',    bgAudio.currentTime.toString());
+        sessionStorage.setItem('tg_audio_playing', '1');
+      } else {
+        sessionStorage.removeItem('tg_audio_time');
+        sessionStorage.removeItem('tg_audio_playing');
+      }
+    });
+
+    if (musicBtn) {
+      musicBtn.addEventListener('click', function () {
+        isPlaying ? stopMusic() : startMusic();
+      });
+    }
+  </script>
+</body>
+</html>

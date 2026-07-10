@@ -1,0 +1,539 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>TravelGenie AI — AI-Powered Travel Planner</title>
+  <link rel="stylesheet" href="style.css" />
+  <!-- Bootstrap 5 -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" />
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Playfair+Display:ital,wght@0,700;1,600&display=swap" rel="stylesheet" />
+</head>
+<body>
+
+<!-- ═══════════════════════════════════
+     LOADING SCREEN
+═══════════════════════════════════ -->
+<div id="loadScreen" class="load-screen">
+  <div class="load-content">
+    <div class="load-logo">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="12" cy="12" r="9"/><ellipse cx="12" cy="12" rx="4.5" ry="9"/>
+        <line x1="3" y1="9" x2="21" y2="9"/><line x1="3" y1="15" x2="21" y2="15"/>
+      </svg>
+    </div>
+    <div class="load-title">TravelGenie <span>AI</span></div>
+    <div class="load-bar-wrap"><div class="load-bar" id="loadBar"></div></div>
+    <div class="load-status" id="loadStatus">Initialising…</div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════
+     TOAST CONTAINER
+═══════════════════════════════════ -->
+<div id="toastContainer" class="toast-container"></div>
+
+<!-- ═══════════════════════════════════
+     SIDEBAR
+═══════════════════════════════════ -->
+<aside class="sidebar" id="sidebar">
+  <div class="sidebar-logo">
+    <div class="sidebar-icon-mark">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" width="20" height="20">
+        <circle cx="12" cy="12" r="9"/><ellipse cx="12" cy="12" rx="4.5" ry="9"/>
+        <line x1="3" y1="9" x2="21" y2="9"/><line x1="3" y1="15" x2="21" y2="15"/>
+      </svg>
+    </div>
+    <span>TravelGenie <b>AI</b></span>
+  </div>
+  <nav class="sidebar-nav">
+    <a href="#home"         class="nav-item active" data-section="home">        <span class="nav-ico">🏠</span><span class="nav-lbl">Home</span></a>
+    <a href="#explore"      class="nav-item"         data-section="explore">     <span class="nav-ico">🌍</span><span class="nav-lbl">Explore</span></a>
+    <a href="#my-trips"     class="nav-item"         data-section="my-trips">    <span class="nav-ico">🧳</span><span class="nav-lbl">My Trips</span></a>
+    <a href="#saved"        class="nav-item"         data-section="saved">       <span class="nav-ico">❤️</span><span class="nav-lbl">Saved Trips</span></a>
+    <a href="#popular"      class="nav-item"         data-section="popular">     <span class="nav-ico">📍</span><span class="nav-lbl">Popular</span></a>
+    <a href="#budget"       class="nav-item"         data-section="budget">      <span class="nav-ico">💰</span><span class="nav-lbl">Budget Planner</span></a>
+    <a href="#weather"      class="nav-item"         data-section="weather">     <span class="nav-ico">🌦</span><span class="nav-lbl">Weather</span></a>
+    <a href="#ai-chat"      class="nav-item"         data-section="ai-chat">     <span class="nav-ico">🤖</span><span class="nav-lbl">AI Chat</span></a>
+    <a href="#settings"     class="nav-item"         data-section="settings">    <span class="nav-ico">⚙️</span><span class="nav-lbl">Settings</span></a>
+  </nav>
+  <div class="sidebar-bottom">
+    <button class="music-toggle" id="musicToggle" title="Toggle ambient music">
+      <span id="musicIco">🎵</span> <span id="musicLbl">Play Music</span>
+    </button>
+    <button class="theme-toggle" id="themeToggle" title="Toggle dark/light mode">
+      <span id="themeIco">🌙</span> <span id="themeLabel">Dark Mode</span>
+    </button>
+  </div>
+</aside>
+
+<!-- ═══════════════════════════════════
+     TOPBAR (mobile)
+═══════════════════════════════════ -->
+<header class="topbar">
+  <button class="sidebar-toggle" id="sidebarToggle" aria-label="Toggle sidebar">
+    <span></span><span></span><span></span>
+  </button>
+  <div class="topbar-brand">TravelGenie <span>AI</span></div>
+  <button class="topbar-chat-btn" id="topbarChatBtn">🤖 AI Chat</button>
+</header>
+
+<!-- ═══════════════════════════════════
+     MAIN CONTENT
+═══════════════════════════════════ -->
+<main class="main-content" id="mainContent">
+
+  <!-- ─── PARTICLES ─── -->
+  <div class="particles" id="particles" aria-hidden="true"></div>
+
+  <!-- ─── ANIMATED BACKGROUND LAYERS ─── -->
+  <div class="bg-layer" aria-hidden="true">
+    <div class="bg-orb bg-orb-1"></div>
+    <div class="bg-orb bg-orb-2"></div>
+    <div class="bg-orb bg-orb-3"></div>
+    <div class="bg-orb bg-orb-4"></div>
+    <div class="bg-orb bg-orb-5"></div>
+    <div class="aurora aurora-1"></div>
+    <div class="aurora aurora-2"></div>
+    <div class="aurora aurora-3"></div>
+    <div class="bg-grid"></div>
+    <div class="shooting-stars" id="shootingStars"></div>
+  </div>
+
+  <!-- ════════════════════════════
+       SECTION: HOME / HERO
+  ════════════════════════════ -->
+  <section id="home" class="section hero-section reveal">
+    <div class="hero-bg"></div>
+    <div class="hero-inner container-fluid">
+      <div class="row align-items-center min-vh-hero">
+        <div class="col-lg-7">
+          <div class="hero-badge reveal-up">✨ Powered by IBM watsonx Orchestrate</div>
+          <h1 class="hero-title reveal-up">
+            Your <span class="grad">AI-Powered</span><br>Travel Companion
+          </h1>
+          <p class="hero-sub reveal-up">
+            Plan dream itineraries, discover hidden gems, and get personalised travel guidance — all through a single conversation with your AI agent.
+          </p>
+          <!-- Search Bar -->
+          <div class="search-bar reveal-up" id="searchBar">
+            <div class="search-field">
+              <span>📍</span>
+              <input type="text" id="searchInput" placeholder="Where do you want to go?" autocomplete="off" />
+            </div>
+            <div class="search-divider"></div>
+            <div class="search-field">
+              <span>📅</span>
+              <input type="text" id="searchDuration" placeholder="Duration (e.g. 7 days)" />
+            </div>
+            <div class="search-divider"></div>
+            <div class="search-field">
+              <span>💰</span>
+              <select id="searchBudget">
+                <option value="">Budget</option>
+                <option>Budget</option><option>Mid-Range</option><option>Luxury</option>
+              </select>
+            </div>
+            <button class="search-btn ripple" id="searchBtn">Search</button>
+          </div>
+          <div class="hero-actions reveal-up">
+            <button class="btn-primary ripple" id="exploreBtn">🌍 Explore Destinations</button>
+            <button class="btn-glass ripple" id="heroAiBtn">🤖 Chat with AI</button>
+          </div>
+        </div>
+        <div class="col-lg-5 d-none d-lg-block">
+          <div class="hero-cards-float">
+            <div class="float-card fc-1" style="--img:url('https://images.unsplash.com/photo-1502602898657-3e91760cbb34?w=400&q=80')">
+              <div class="fc-overlay"><span>Paris, France</span><span class="fc-rating">⭐ 4.9</span></div>
+            </div>
+            <div class="float-card fc-2" style="--img:url('https://images.unsplash.com/photo-1538970272646-f61fabb3a8a2?w=400&q=80')">
+              <div class="fc-overlay"><span>Santorini, Greece</span><span class="fc-rating">⭐ 4.8</span></div>
+            </div>
+            <div class="float-card fc-3" style="--img:url('https://images.unsplash.com/photo-1537996194471-e657df975ab4?w=400&q=80')">
+              <div class="fc-overlay"><span>Bali, Indonesia</span><span class="fc-rating">⭐ 4.9</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <!-- Stats strip -->
+    <div class="stats-strip reveal">
+      <div class="stat-card">
+        <span class="stat-num" data-target="10000">0</span><span class="stat-plus">+</span>
+        <span class="stat-lbl">Destinations</span>
+      </div>
+      <div class="stat-card">
+        <span class="stat-num" data-target="2500000">0</span><span class="stat-plus">+</span>
+        <span class="stat-lbl">Trips Planned</span>
+      </div>
+      <div class="stat-card">
+        <span class="stat-num" data-target="98">0</span><span class="stat-plus">%</span>
+        <span class="stat-lbl">Satisfaction</span>
+      </div>
+      <div class="stat-card">
+        <span class="stat-num" data-target="195">0</span><span class="stat-plus">+</span>
+        <span class="stat-lbl">Countries</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- ════════════════════════════
+       QUICK AI PROMPTS
+  ════════════════════════════ -->
+  <section id="ai-prompts" class="section reveal">
+    <div class="container-fluid">
+      <div class="section-header">
+        <h2 class="section-title">Quick <span class="grad">AI Prompts</span></h2>
+        <p class="section-sub">Click any prompt to instantly chat with your AI travel agent</p>
+      </div>
+      <div class="prompts-grid">
+        <button class="prompt-btn ripple" data-prompt="Plan a perfect 7-day trip for me. Ask me about my destination, budget, and interests.">✈️ Plan a 7-Day Trip</button>
+        <button class="prompt-btn ripple" data-prompt="What are the best beach destinations in the world right now? Include hidden gems and top rated beaches.">🏖️ Best Beach Destinations</button>
+        <button class="prompt-btn ripple" data-prompt="Suggest the most thrilling mountain adventure destinations with trekking and outdoor activities.">🏔️ Mountain Adventure</button>
+        <button class="prompt-btn ripple" data-prompt="I need a budget-friendly travel plan. Help me find amazing destinations without breaking the bank.">💰 Budget Trip Planner</button>
+        <button class="prompt-btn ripple" data-prompt="Plan a perfect family vacation with kid-friendly activities, safe destinations and family resorts.">👨‍👩‍👧 Family Vacation</button>
+        <button class="prompt-btn ripple" data-prompt="Suggest the most romantic honeymoon destinations with luxury stays and private experiences.">❤️ Honeymoon Destinations</button>
+        <button class="prompt-btn ripple" data-prompt="Plan an international tour covering multiple countries. Give me a complete itinerary with tips.">🌍 International Tour</button>
+        <button class="prompt-btn ripple" data-prompt="I want to go solo backpacking. Suggest the best destinations, safety tips, hostels and budget advice.">🎒 Solo Backpacking Trip</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ════════════════════════════
+       TRENDING DESTINATIONS
+  ════════════════════════════ -->
+  <section id="explore" class="section reveal">
+    <div class="container-fluid">
+      <div class="section-header">
+        <h2 class="section-title">Trending <span class="grad">Destinations</span></h2>
+        <p class="section-sub">Handpicked by our AI from millions of travel plans</p>
+      </div>
+      <div class="dest-grid" id="destGrid">
+        <!-- Cards injected by JS -->
+      </div>
+    </div>
+  </section>
+
+  <!-- ════════════════════════════
+       TRAVEL CATEGORIES
+  ════════════════════════════ -->
+  <section id="categories" class="section reveal">
+    <div class="container-fluid">
+      <div class="section-header">
+        <h2 class="section-title">Travel <span class="grad">Categories</span></h2>
+      </div>
+      <div class="categories-row">
+        <div class="cat-card reveal-up" style="--cat-color:#7c5cd8">
+          <div class="cat-icon">🏄</div>
+          <div class="cat-name">Adventure</div>
+          <div class="cat-count">340+ trips</div>
+        </div>
+        <div class="cat-card reveal-up" style="--cat-color:#3b82d4">
+          <div class="cat-icon">🏖️</div>
+          <div class="cat-name">Beaches</div>
+          <div class="cat-count">280+ trips</div>
+        </div>
+        <div class="cat-card reveal-up" style="--cat-color:#06b6d4">
+          <div class="cat-icon">⛰️</div>
+          <div class="cat-name">Hill Stations</div>
+          <div class="cat-count">190+ trips</div>
+        </div>
+        <div class="cat-card reveal-up" style="--cat-color:#10b981">
+          <div class="cat-icon">👨‍👩‍👧</div>
+          <div class="cat-name">Family</div>
+          <div class="cat-count">420+ trips</div>
+        </div>
+        <div class="cat-card reveal-up" style="--cat-color:#f59e0b">
+          <div class="cat-icon">💎</div>
+          <div class="cat-name">Luxury</div>
+          <div class="cat-count">160+ trips</div>
+        </div>
+        <div class="cat-card reveal-up" style="--cat-color:#ec4899">
+          <div class="cat-icon">💝</div>
+          <div class="cat-name">Honeymoon</div>
+          <div class="cat-count">210+ trips</div>
+        </div>
+        <div class="cat-card reveal-up" style="--cat-color:#8b5cf6">
+          <div class="cat-icon">🎒</div>
+          <div class="cat-name">Backpacking</div>
+          <div class="cat-count">310+ trips</div>
+        </div>
+        <div class="cat-card reveal-up" style="--cat-color:#ef4444">
+          <div class="cat-icon">💰</div>
+          <div class="cat-name">Budget</div>
+          <div class="cat-count">500+ trips</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ════════════════════════════
+       POPULAR DESTINATIONS (India focus)
+  ════════════════════════════ -->
+  <section id="popular" class="section reveal">
+    <div class="container-fluid">
+      <div class="section-header">
+        <h2 class="section-title">Popular <span class="grad">in India</span></h2>
+        <p class="section-sub">Top-rated domestic destinations loved by travellers</p>
+      </div>
+      <div class="dest-grid" id="indiaGrid">
+        <!-- Injected by JS -->
+      </div>
+    </div>
+  </section>
+
+  <!-- ════════════════════════════
+       MY TRIPS / SAVED
+  ════════════════════════════ -->
+  <section id="my-trips" class="section reveal">
+    <div class="container-fluid">
+      <div class="section-header">
+        <h2 class="section-title">My <span class="grad">Trips</span></h2>
+        <p class="section-sub">Your AI-planned itineraries</p>
+      </div>
+      <div class="trips-empty" id="tripsEmpty">
+        <div class="empty-ico">✈️</div>
+        <p>No trips planned yet.</p>
+        <button class="btn-primary ripple" id="planTripBtn">Start Planning with AI</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ════════════════════════════
+       BUDGET PLANNER
+  ════════════════════════════ -->
+  <section id="budget" class="section reveal">
+    <div class="container-fluid">
+      <div class="section-header">
+        <h2 class="section-title">💰 Budget <span class="grad">Planner</span></h2>
+        <p class="section-sub">Estimate your travel budget with AI</p>
+      </div>
+      <div class="budget-card glass-card">
+        <div class="row g-3">
+          <div class="col-md-4">
+            <label class="form-label">Destination</label>
+            <input type="text" class="form-input" id="budgetDest" placeholder="e.g. Paris" />
+          </div>
+          <div class="col-md-3">
+            <label class="form-label">Duration</label>
+            <input type="number" class="form-input" id="budgetDays" placeholder="Days" min="1" max="90" />
+          </div>
+          <div class="col-md-3">
+            <label class="form-label">Style</label>
+            <select class="form-input" id="budgetStyle">
+              <option>Budget</option><option>Mid-Range</option><option>Luxury</option>
+            </select>
+          </div>
+          <div class="col-md-2 d-flex align-items-end">
+            <button class="btn-primary ripple w-100" id="budgetCalcBtn">Calculate</button>
+          </div>
+        </div>
+        <div class="budget-result" id="budgetResult"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ════════════════════════════
+       WEATHER
+  ════════════════════════════ -->
+  <section id="weather" class="section reveal">
+    <div class="container-fluid">
+      <div class="section-header">
+        <h2 class="section-title">🌦 Travel <span class="grad">Weather</span></h2>
+        <p class="section-sub">Best seasons to visit your dream destinations</p>
+      </div>
+      <div class="weather-grid" id="weatherGrid">
+        <!-- Injected by JS -->
+      </div>
+    </div>
+  </section>
+
+  <!-- ════════════════════════════
+       AI CHAT SECTION
+  ════════════════════════════ -->
+  <section id="ai-chat" class="section reveal">
+    <div class="container-fluid">
+      <div class="chat-hero">
+        <div class="chat-hero-content">
+          <div class="chat-badge">🤖 IBM watsonx Orchestrate</div>
+          <h2 class="section-title">Your AI Travel <span class="grad">Agent is Live</span></h2>
+          <p class="section-sub">Ask anything — itineraries, visa tips, budgets, hidden gems, hotel recommendations and more.</p>
+          <button class="btn-primary btn-lg-custom ripple" id="openChatBtn">
+            💬 Open AI Chat
+          </button>
+          <div class="chat-features">
+            <span class="feat-chip">✈️ Itineraries</span>
+            <span class="feat-chip">🛂 Visa Tips</span>
+            <span class="feat-chip">💰 Budgets</span>
+            <span class="feat-chip">🏨 Hotels</span>
+            <span class="feat-chip">🗺️ Hidden Gems</span>
+            <span class="feat-chip">🌦 Weather</span>
+          </div>
+        </div>
+        <div class="chat-hero-visual">
+          <div class="chat-orb"></div>
+          <div class="chat-ring r1"></div>
+          <div class="chat-ring r2"></div>
+          <div class="chat-ring r3"></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ════════════════════════════
+       SETTINGS
+  ════════════════════════════ -->
+  <section id="settings" class="section reveal">
+    <div class="container-fluid">
+      <div class="section-header">
+        <h2 class="section-title">⚙️ <span class="grad">Settings</span></h2>
+      </div>
+      <div class="settings-grid">
+        <!-- Theme -->
+        <div class="settings-card glass-card">
+          <h4>🎨 Appearance</h4>
+          <div class="setting-row">
+            <span>Dark Mode</span>
+            <label class="toggle-switch"><input type="checkbox" id="darkToggle"><span class="toggle-slider"></span></label>
+          </div>
+          <div class="setting-row">
+            <span>Theme Colour</span>
+            <div class="colour-opts">
+              <button class="colour-dot active" style="background:#7c5cd8" data-colour="purple" title="Purple"></button>
+              <button class="colour-dot" style="background:#3b82d4" data-colour="blue" title="Blue"></button>
+              <button class="colour-dot" style="background:#10b981" data-colour="green" title="Green"></button>
+              <button class="colour-dot" style="background:#f59e0b" data-colour="gold" title="Gold"></button>
+              <button class="colour-dot" style="background:#ec4899" data-colour="pink" title="Pink"></button>
+            </div>
+          </div>
+        </div>
+        <!-- Notifications -->
+        <div class="settings-card glass-card">
+          <h4>🔔 Notifications</h4>
+          <div class="setting-row">
+            <span>Travel Alerts</span>
+            <label class="toggle-switch"><input type="checkbox" id="notifAlerts" checked><span class="toggle-slider"></span></label>
+          </div>
+          <div class="setting-row">
+            <span>Deal Notifications</span>
+            <label class="toggle-switch"><input type="checkbox" id="notifDeals"><span class="toggle-slider"></span></label>
+          </div>
+          <div class="setting-row">
+            <span>AI Updates</span>
+            <label class="toggle-switch"><input type="checkbox" id="notifAI" checked><span class="toggle-slider"></span></label>
+          </div>
+        </div>
+        <!-- Language & Currency -->
+        <div class="settings-card glass-card">
+          <h4>🌐 Locale</h4>
+          <div class="setting-row">
+            <span>Language</span>
+            <select class="form-input-sm" id="langSelect">
+              <option>English</option><option>Hindi</option><option>French</option>
+              <option>Spanish</option><option>German</option><option>Japanese</option>
+            </select>
+          </div>
+          <div class="setting-row">
+            <span>Currency</span>
+            <select class="form-input-sm" id="currencySelect">
+              <option>USD ($)</option><option>EUR (€)</option><option>GBP (£)</option>
+              <option>INR (₹)</option><option>JPY (¥)</option><option>AED (د.إ)</option>
+            </select>
+          </div>
+        </div>
+        <!-- About -->
+        <div class="settings-card glass-card">
+          <h4>ℹ️ About</h4>
+          <p style="font-size:0.85rem;opacity:0.7;margin-bottom:12px;">
+            TravelGenie AI v2.0<br>Powered by IBM watsonx Orchestrate.<br>
+            Plan smarter. Travel better.
+          </p>
+          <button class="btn-primary ripple" id="clearDataBtn">🗑 Clear Saved Data</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ════════════════════════════
+       NEWSLETTER
+  ════════════════════════════ -->
+  <section class="section newsletter-section reveal">
+    <div class="container-fluid">
+      <div class="newsletter-card glass-card text-center">
+        <h2 class="section-title">Get Travel <span class="grad">Inspiration</span></h2>
+        <p class="section-sub">Sign up for weekly AI-curated travel deals & destination ideas.</p>
+        <div class="newsletter-form">
+          <input type="email" id="newsletterEmail" placeholder="Your email address" />
+          <button class="btn-primary ripple" id="newsletterBtn">Subscribe</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ════════════════════════════
+       FOOTER
+  ════════════════════════════ -->
+  <footer class="footer">
+    <div class="container-fluid">
+      <div class="footer-grid">
+        <div class="footer-brand">
+          <div class="footer-logo">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" width="22" height="22">
+              <circle cx="12" cy="12" r="9"/><ellipse cx="12" cy="12" rx="4.5" ry="9"/>
+              <line x1="3" y1="9" x2="21" y2="9"/><line x1="3" y1="15" x2="21" y2="15"/>
+            </svg>
+            TravelGenie <b>AI</b>
+          </div>
+          <p>Your AI-powered travel companion. Powered by IBM watsonx Orchestrate.</p>
+          <div class="footer-social">
+            <a href="#" aria-label="GitHub" title="GitHub">
+              <svg viewBox="0 0 24 24" fill="currentColor" width="18" height="18"><path d="M12 2C6.48 2 2 6.58 2 12.26c0 4.54 2.87 8.39 6.84 9.75.5.09.68-.22.68-.48v-1.7c-2.78.62-3.37-1.37-3.37-1.37-.46-1.19-1.12-1.51-1.12-1.51-.91-.64.07-.63.07-.63 1 .07 1.53 1.06 1.53 1.06.9 1.57 2.35 1.12 2.93.86.09-.67.35-1.12.64-1.38-2.22-.26-4.56-1.14-4.56-5.07 0-1.12.39-2.03 1.03-2.75-.1-.26-.45-1.3.1-2.71 0 0 .84-.28 2.75 1.05A9.38 9.38 0 0112 7.1c.85 0 1.71.12 2.51.34 1.91-1.33 2.75-1.05 2.75-1.05.55 1.41.2 2.45.1 2.71.64.72 1.03 1.63 1.03 2.75 0 3.94-2.34 4.81-4.57 5.06.36.32.68.94.68 1.9v2.82c0 .27.18.58.69.48A10.26 10.26 0 0022 12.26C22 6.58 17.52 2 12 2z"/></svg>
+            </a>
+            <a href="#" aria-label="LinkedIn" title="LinkedIn">
+              <svg viewBox="0 0 24 24" fill="currentColor" width="18" height="18"><path d="M4.98 3.5C4.98 4.88 3.88 6 2.5 6S.02 4.88.02 3.5 1.12 1 2.5 1s2.48 1.12 2.48 2.5zM.5 8h4V22h-4V8zm7.5 0h3.82v1.93h.05c.53-1 1.84-2.06 3.78-2.06 4.05 0 4.8 2.67 4.8 6.14V22h-4v-7.14c0-1.7-.03-3.9-2.37-3.9-2.38 0-2.74 1.86-2.74 3.77V22H8V8z"/></svg>
+            </a>
+            <a href="#" aria-label="Twitter" title="Twitter">
+              <svg viewBox="0 0 24 24" fill="currentColor" width="18" height="18"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
+            </a>
+            <a href="#" aria-label="Instagram" title="Instagram">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="18" height="18"><rect x="2" y="2" width="20" height="20" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="0.8" fill="currentColor" stroke="none"/></svg>
+            </a>
+          </div>
+        </div>
+        <div class="footer-links">
+          <h5>Company</h5>
+          <a href="#">About Us</a><a href="#">Careers</a><a href="#">Blog</a><a href="#">Press</a>
+        </div>
+        <div class="footer-links">
+          <h5>Support</h5>
+          <a href="#">Contact</a><a href="#">Help Centre</a><a href="#">Feedback</a><a href="#">Status</a>
+        </div>
+        <div class="footer-links">
+          <h5>Legal</h5>
+          <a href="#">Privacy Policy</a><a href="#">Terms of Service</a><a href="#">Cookie Policy</a>
+        </div>
+      </div>
+      <div class="footer-bottom">
+        <span>© 2025 TravelGenie AI. Powered by IBM watsonx Orchestrate.</span>
+      </div>
+    </div>
+  </footer>
+
+</main><!-- /main-content -->
+
+<!-- ═══════════════════════════════════
+     IBM watsonx Orchestrate Widget
+═══════════════════════════════════ -->
+<div id="root"></div>
+
+<!-- Background audio (optional) -->
+<audio id="bgAudio" src="alex-morgan-native-american-flute-545535.mp3" loop preload="auto"></audio>
+
+<!-- Bootstrap JS -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<script src="script.js"></script>
+</body>
+</html>
